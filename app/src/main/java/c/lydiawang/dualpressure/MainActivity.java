@@ -62,8 +62,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ImageView squareImageView = (ImageView) findViewById(R.id.triangleButton);
-        ImageView circleImageView = (ImageView) findViewById(R.id.triangleButton);
+        ImageView squareImageView = (ImageView) findViewById(R.id.squareButton);
+        ImageView circleImageView = (ImageView) findViewById(R.id.circleButton);
         ImageView triangleImageView = (ImageView) findViewById(R.id.triangleButton);
         float strokeWidth = getResources().getDimension(R.dimen.strokeWidth);
         shapeSize = getResources().getDimension(R.dimen.shapeSize);
@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private ShapeDrawable createTriangle(int strokeWidth, int triangleFillColor, ColorStateList strokeColor) {
-        final Triangle triangle = new Triangle(strokeWidth, triangleFillColor, strokeColor);
+        final Triang triangle = new Triang(strokeWidth, triangleFillColor, strokeColor);
         ShapeDrawable shapeDrawable = new ShapeDrawable(triangle) {
             @Override
             protected boolean onStateChange(int[] stateSet) {

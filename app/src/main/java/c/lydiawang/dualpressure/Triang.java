@@ -9,12 +9,6 @@ import android.graphics.Path;
  */
 
 public class Triang extends Geom {
-    protected int strokeWidth;
-    protected int fillColor;
-    protected ColorStateList strokeColor;
-    protected Path path;
-    protected Paint strokePaint;
-    protected Paint fillPaint;
 
     public Triang(int strokeWidth, int fillColor, ColorStateList strokeColor) {
         super(strokeWidth, fillColor, strokeColor);

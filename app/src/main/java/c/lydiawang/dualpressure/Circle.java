@@ -9,12 +9,6 @@ import android.graphics.Path;
  */
 
 public class Circle extends Geom {
-    protected int strokeWidth;
-    protected int fillColor;
-    protected ColorStateList strokeColor;
-    protected Path path;
-    protected Paint strokePaint;
-    protected Paint fillPaint;
 
     public Circle(int strokeWidth, int fillColor, ColorStateList strokeColor) {
         super(strokeWidth, fillColor, strokeColor);
