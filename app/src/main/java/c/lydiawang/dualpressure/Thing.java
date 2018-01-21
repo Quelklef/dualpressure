@@ -4,7 +4,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 
 /**
- * Created by lydiawang on 1/18/18.
+ * Created by lydiawang (WRONG) on 1/18/18.
  */
 
 public class Thing {
