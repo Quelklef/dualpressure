@@ -62,17 +62,30 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ImageView squareImageView = (ImageView) findViewById(R.id.squareButton);
+        ImageView circleImageView = (ImageView) findViewById(R.id.circleButton);
         ImageView triangleImageView = (ImageView) findViewById(R.id.triangleButton);
         float strokeWidth = getResources().getDimension(R.dimen.strokeWidth);
         shapeSize = getResources().getDimension(R.dimen.shapeSize);
         int triangleFillColor = getResources().getColor(R.color.triangleColor);
+        int squareFillColor = getResources().getColor(R.color.squareColor);
+        int circleFillColor = getResources().getColor(R.color.circleColor);
         ColorStateList strokeColor = getResources().getColorStateList(R.color.stroke);
-        squareDrawable = getResources().getDrawable(R.drawable.square);
-        circleDrawable = getResources().getDrawable(R.drawable.circle);
+        //squareDrawable = getResources().getDrawable(R.drawable.square);
+        //circleDrawable = getResources().getDrawable(R.drawable.circle);
+
+        squareDrawable = createSquare((int) strokeWidth, squareFillColor, strokeColor);
+        circleDrawable = createCircle((int) strokeWidth, circleFillColor, strokeColor);
         triangleDrawable = createTriangle((int) strokeWidth, triangleFillColor, strokeColor);
 
         lineColor = getResources().getColor(R.color.lineColor);
         lineWidth = getResources().getDimension(R.dimen.lineWidth);
+
+        assert squareImageView != null;
+        squareImageView.setImageDrawable(createSquare((int) strokeWidth, squareFillColor, strokeColor));
+
+        assert circleImageView != null;
+        circleImageView.setImageDrawable(createCircle((int) strokeWidth, circleFillColor, strokeColor));
 
         assert triangleImageView != null;
         triangleImageView.setImageDrawable(createTriangle((int) strokeWidth, triangleFillColor, strokeColor));
@@ -86,11 +99,51 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private ShapeDrawable createTriangle(int strokeWidth, int triangleFillColor, ColorStateList strokeColor) {
-        final Triangle triangle = new Triangle(strokeWidth, triangleFillColor, strokeColor);
+        final Triang triangle = new Triang(strokeWidth, triangleFillColor, strokeColor);
         ShapeDrawable shapeDrawable = new ShapeDrawable(triangle) {
             @Override
             protected boolean onStateChange(int[] stateSet) {
                 triangle.setState(stateSet);
+                return super.onStateChange(stateSet);
+            }
+
+            @Override
+            public boolean isStateful() {
+                return true;
+            }
+        };
+        shapeDrawable.setIntrinsicHeight((int) shapeSize);
+        shapeDrawable.setIntrinsicWidth((int) shapeSize);
+        shapeDrawable.setBounds(0, 0, (int) shapeSize, (int) shapeSize);
+        return shapeDrawable;
+    }
+
+    private ShapeDrawable createSquare(int strokeWidth, int squareFillColor, ColorStateList strokeColor) {
+        final Square square = new Square(strokeWidth, squareFillColor, strokeColor);
+        ShapeDrawable shapeDrawable = new ShapeDrawable(square) {
+            @Override
+            protected boolean onStateChange(int[] stateSet) {
+                square.setState(stateSet);
+                return super.onStateChange(stateSet);
+            }
+
+            @Override
+            public boolean isStateful() {
+                return true;
+            }
+        };
+        shapeDrawable.setIntrinsicHeight((int) shapeSize);
+        shapeDrawable.setIntrinsicWidth((int) shapeSize);
+        shapeDrawable.setBounds(0, 0, (int) shapeSize, (int) shapeSize);
+        return shapeDrawable;
+    }
+
+    private ShapeDrawable createCircle(int strokeWidth, int circleFillColor, ColorStateList strokeColor) {
+        final Circle circle = new Circle(strokeWidth, circleFillColor, strokeColor);
+        ShapeDrawable shapeDrawable = new ShapeDrawable(circle) {
+            @Override
+            protected boolean onStateChange(int[] stateSet) {
+                circle.setState(stateSet);
                 return super.onStateChange(stateSet);
             }
 
