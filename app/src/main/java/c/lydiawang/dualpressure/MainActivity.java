@@ -27,6 +27,9 @@ public class MainActivity extends AppCompatActivity {
     private Paint squareStroke;
     private Paint squareFill;
 
+    private Paint diamondStroke;
+    private Paint diamondFill;
+
     private Grid<Geom> grid;
 
     private Paint newStrokePaint(float width, int color) {
@@ -69,17 +72,22 @@ public class MainActivity extends AppCompatActivity {
         squareStroke = newStrokePaint(strokeWidth, Color.BLACK);
         squareFill = newFillPaint(squareFillColor);
 
+        diamondStroke = newStrokePaint(strokeWidth, Color.BLACK);
+        diamondFill = newFillPaint(Color.argb(255, 200, 50, 210));
+
         grid = new Grid<>(4, 6, new Function<Double, Geom>() {
             @Override
             public Geom apply(Double val) {
                 Rect boundless = new Rect(0, 0, 0, 0);
-                int choice = (int) (val * 3);
+                int choice = (int) (val * 4);
                 if (choice == 0) {
                     return new Circle(boundless, circleStroke, circleFill);
                 } else if (choice == 1) {
                     return new Triangle(boundless, triangleStroke, triangleFill);
                 } else if (choice == 2) {
                     return new Square(boundless, squareStroke, squareFill);
+                } else if (choice == 3) {
+                    return new Diamond(boundless, diamondStroke, diamondFill);
                 }
                 return null;
             }
