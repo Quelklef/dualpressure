@@ -83,6 +83,7 @@ public class Grid<T> {
     public void moveg(int fx, int fy, int tx, int ty) {
         T item = inBounds(fx, fy) ? get(fx, fy) : gen();
         set(tx, ty, item);
+        if (inBounds(fx, fy)) remove(fx, fy);
     }
 
     /**
@@ -90,9 +91,10 @@ public class Grid<T> {
      * To fill the created hole, propagate upwards.
      */
     private void dropReplace(int x, int y) {
-        if (y < 0) return;
         moveg(x, y - 1, x, y);
-        dropReplace(x, y - 1);
+        if (y != 0) {
+            dropReplace(x, y - 1);
+        }
     }
 
     /**
@@ -114,14 +116,9 @@ public class Grid<T> {
      */
     public List<T> getAll() {
         List<T> ret = new LinkedList<>();
-        int i = 0;
-
         for (List<T> row : grid) {
-            for (T item : row) {
-                ret.add(item);
-            }
+            ret.addAll(row);
         }
-
         return ret;
     }
 

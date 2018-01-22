@@ -5,8 +5,8 @@ import android.graphics.Rect;
 import android.graphics.Path;
 
 public class Diamond extends Geom {
-    public Diamond(Rect bounds, Paint stroke, Paint fill) {
-        super(bounds, stroke, fill);
+    public Diamond(Rect bounds, Paint stroke, Paint fill, Paint shineFill) {
+        super(bounds, stroke, fill, shineFill);
     }
 
     protected Path makePath() {

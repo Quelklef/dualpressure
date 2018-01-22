@@ -5,8 +5,8 @@ import android.graphics.Path;
 import android.graphics.Rect;
 
 public class Circle extends Geom {
-    public Circle(Rect bounds, Paint stroke, Paint fill) {
-        super(bounds, stroke, fill);
+    public Circle(Rect bounds, Paint stroke, Paint fill, Paint shineFill) {
+        super(bounds, stroke, fill, shineFill);
     }
 
     @Override
