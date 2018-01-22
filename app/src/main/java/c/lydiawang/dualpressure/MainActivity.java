@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         squareStroke = newStrokePaint(strokeWidth, Color.BLACK);
         squareFill = newFillPaint(squareFillColor);
 
-        grid = new Grid<>(4, 6, new Function<Double, Geom>() {
+        grid = new Grid<>(6, 9, new Function<Double, Geom>() {
             @Override
             public Geom apply(Double val) {
                 Rect boundless = new Rect(0, 0, 0, 0);
@@ -162,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        private final int padding = 50;
+        private final int padding = 40;
         @Override
         protected void onDraw(Canvas canvas) {
             for (int col = 0; col < grid.width; col++) {
@@ -170,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
                     Geom g = grid.get(col, row);
                     int ss = (int) shapeSize;
                     int offset = (int) (shapeSize / 2) + padding;
-                    g.setBounds(makeBounds((ss + padding) * col + offset, (ss + padding) * row + offset, ss)); // Because they started as boundless
+                    g.setBounds(makeBounds((ss + padding) * col + offset + 40, (ss + padding) * row + offset + 20, ss)); // Because they started as boundless
                     g.draw(canvas);
                 }
             }
