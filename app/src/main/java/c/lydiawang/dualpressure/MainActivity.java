@@ -71,15 +71,11 @@ public class MainActivity extends AppCompatActivity {
 
         squareStroke = newStrokePaint(strokeWidth, Color.BLACK);
         squareFill = newFillPaint(squareFillColor);
-
-<<<<<<< HEAD
+        
         diamondStroke = newStrokePaint(strokeWidth, Color.BLACK);
         diamondFill = newFillPaint(Color.argb(255, 200, 50, 210));
 
-        grid = new Grid<>(4, 6, new Function<Double, Geom>() {
-=======
         grid = new Grid<>(6, 9, new Function<Double, Geom>() {
->>>>>>> 33cd91511295514a9b0ee7fdeb16e4ddeeb4f653
             @Override
             public Geom apply(Double val) {
                 Rect boundless = new Rect(0, 0, 0, 0);
