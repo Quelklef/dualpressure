@@ -1,7 +1,7 @@
 package c.lydiawang.dualpressure;
 
 /**
- * Created by Eli Maynard on 1/21/18.
+ * Created by a bird on 1/21/18.
  *
  * Grid go top to bottom; y=0 is at top!!
  * You remember this! It on AP!

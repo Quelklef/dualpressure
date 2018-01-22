@@ -1,58 +1,47 @@
 package c.lydiawang.dualpressure;
 
-import android.content.res.ColorStateList;
 import android.graphics.Canvas;
+import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.drawable.shapes.Shape;
+import android.graphics.PixelFormat;
+import android.graphics.Rect;
+import android.support.annotation.Nullable;
 
-/**
- * Created by lydiawang on 1/18/18.
- */
+public abstract class Geom extends android.graphics.drawable.Drawable {
+    protected Rect bounds;
+    protected Paint stroke;
+    protected Paint fill;
 
-public class Geom extends android.graphics.drawable.shapes.Shape {
-    protected int strokeWidth;
-    protected final int fillColor;
-    protected ColorStateList strokeColor;
     protected Path path;
-    protected Paint strokePaint;
-    protected Paint fillPaint;
 
-    public Geom(int strokeWidth, int fillColor, ColorStateList strokeColor) {
-        this.strokeWidth = strokeWidth;
-        this.fillColor = fillColor;
-        this.strokeColor = strokeColor;
-
-        this.strokePaint = new Paint();
-        this.strokePaint.setStyle(Paint.Style.STROKE);
-        this.strokePaint.setColor(strokeColor.getColorForState(new int[0], 0));
-        this.strokePaint.setStrokeJoin(Paint.Join.ROUND);
-        this.strokePaint.setStrokeWidth(strokeWidth);
-
-        this.fillPaint = new Paint();
-        this.fillPaint.setStyle(Paint.Style.FILL);
-        this.fillPaint.setColor(fillColor);
+    public Geom(Rect bounds, Paint stroke, Paint fill) {
+        this.bounds = bounds;
+        this.stroke = stroke;
+        this.fill = fill;
     }
 
-    public void setState(int[] stateList) {
-        this.strokePaint.setColor(strokeColor.getColorForState(stateList, 0));
+    protected abstract Path makePath();
+
+    @Override
+    public void draw(Canvas canvas) {
+        path = makePath();
+        canvas.drawPath(path, stroke);
+        canvas.drawPath(path, fill);
     }
 
     @Override
-    public void draw(Canvas canvas, Paint paint) {
-        canvas.drawPath(path, fillPaint);
-        canvas.drawPath(path, strokePaint);
+    public void setAlpha(int i) {
+
     }
 
     @Override
-    protected void onResize(float width, float height) {
-        super.onResize(width, height);
-        path = new Path();
-        /**
-        path.moveTo(width/2, 0);
-        path.lineTo(width, height);
-        path.lineTo(0, height);
-        path.close();
-         */
+    public void setColorFilter(@Nullable ColorFilter colorFilter) {
+
+    }
+
+    @Override
+    public int getOpacity() {
+        return PixelFormat.OPAQUE;
     }
 }

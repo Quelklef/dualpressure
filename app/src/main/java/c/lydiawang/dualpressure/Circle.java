@@ -1,24 +1,18 @@
 package c.lydiawang.dualpressure;
 
-import android.content.res.ColorStateList;
 import android.graphics.Paint;
 import android.graphics.Path;
-
-/**
- * Created by lydiawang on 1/18/18.
- */
+import android.graphics.Rect;
 
 public class Circle extends Geom {
-
-    public Circle(int strokeWidth, int fillColor, ColorStateList strokeColor) {
-        super(strokeWidth, fillColor, strokeColor);
+    public Circle(Rect bounds, Paint stroke, Paint fill) {
+        super(bounds, stroke, fill);
     }
 
     @Override
-    protected void onResize(float width, float height) {
-        super.onResize(width, height);
-        path = new Path();
-        path.addCircle(width/2, width/2, width/2, Path.Direction.CCW);
-        path.close();
+    protected Path makePath() {
+        Path path = new Path();
+        path.addCircle(bounds.centerX(), bounds.centerY(), Math.min(bounds.width(), bounds.height()) / 2, Path.Direction.CCW);
+        return path;
     }
 }
