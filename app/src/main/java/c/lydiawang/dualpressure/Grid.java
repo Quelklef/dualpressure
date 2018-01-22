@@ -1,6 +1,7 @@
 package c.lydiawang.dualpressure;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -11,7 +12,7 @@ import java.util.List;
  */
 
 public class Grid<T> {
-    private List<List<T>> grid = new ArrayList<>();  // [x][y], [col][row]
+    private List<List<T>> grid = new LinkedList<>();  // [x][y], [col][row]
     public int width;
     public int height;
     private Function<Double, T> generator;
@@ -25,7 +26,7 @@ public class Grid<T> {
         height = h;
 
         for (int x = 0; x < width; x++) {
-            List<T> col =new ArrayList<>();
+            List<T> col =new LinkedList<>();
             for (int y = 0; y < height; y++) {
                 col.add(null);
             }
@@ -66,6 +67,10 @@ public class Grid<T> {
         set(x, y, null);
     }
 
+    public void remove(T item) {
+        remove(colOf(item), rowOf(item));
+    }
+
     public boolean inBounds(int x, int y) {
         return x > 0 && y > 0 && x < width && y < height;
     }
@@ -81,29 +86,25 @@ public class Grid<T> {
     }
 
     /**
+     * Move the item above the given item into its space.
+     * To fill the created hole, propagate upwards.
+     */
+    private void dropReplace(int x, int y) {
+        if (y < 0) return;
+        moveg(x, y - 1, x, y);
+        dropReplace(x, y - 1);
+    }
+
+    /**
      * Move columns down to fillPaint null spots
      * Each column must have only one contiguous null spot
      */
     public void fall() {
         for (int col = 0; col < width; col++) {
-            int holeStop = -1; // Index of bottom-most null in hole
-            int holeSize = 0;
-            boolean holeExists = false;
-
             for (int row = 0; row < height; row++) {
                 if (get(col, row) == null) {
-                    holeExists = true;
-                    holeSize++;
-                    holeStop = row;
+                    dropReplace(col, row);
                 }
-            }
-
-            // Skip row if there's no hole
-            if (!holeExists) continue;
-
-            // Fill in the hole
-            for (int row = holeStop; row <= 0; row--) {
-                moveg(col, row, col, row - holeSize);
             }
         }
     }
@@ -112,7 +113,7 @@ public class Grid<T> {
      * Get all items in grid
      */
     public List<T> getAll() {
-        List<T> ret = new ArrayList<>();
+        List<T> ret = new LinkedList<>();
         int i = 0;
 
         for (List<T> row : grid) {
@@ -161,5 +162,29 @@ public class Grid<T> {
         int by = rowOf(b);
         return (ax == bx && Math.abs(ay - by) == 1) ||
                 (ay == by && Math.abs(ax - bx) == 1);
+    }
+
+    public List<List<T>> cols() {
+        List<List<T>> ret = new LinkedList<>();
+        for (int col = 0; col < width; col++) {
+            List<T> colList = new LinkedList<>();
+            for (int row = 0; row < height; row++) {
+                colList.add(get(col, row));
+            }
+            ret.add(colList);
+        }
+        return ret;
+    }
+
+    public List<List<T>> rows() {
+        List<List<T>> ret = new LinkedList<>();
+        for (int row = 0; row < height; row++) {
+            List<T> rowList = new LinkedList<>();
+            for (int col = 0; col < width; col++) {
+                rowList.add(get(col, row));
+            }
+            ret.add(rowList);
+        }
+        return ret;
     }
 }

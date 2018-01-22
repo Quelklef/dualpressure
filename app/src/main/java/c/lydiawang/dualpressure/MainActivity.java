@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
         squareStroke = newStrokePaint(strokeWidth, Color.BLACK);
         squareFill = newFillPaint(squareFillColor);
-        
+
         diamondStroke = newStrokePaint(strokeWidth, Color.BLACK);
         diamondFill = newFillPaint(Color.argb(255, 200, 50, 210));
 
@@ -162,17 +162,108 @@ public class MainActivity extends AppCompatActivity {
          */
         private void setBlinking(Geom g, boolean blinking) {
             if (g == null) return;
-            Class clazz = g.getClass();
             for (Geom item : grid.getAll()) {
-                if (item.getClass().equals(clazz)) {
-                    // Do thing
+                if (matches(g, item)) {
+                    item.shine = blinking;
                 }
             }
+        }
+
+        /**
+         * Return if geoms of same shape.
+         * False on null a or b.
+         */
+        private boolean matches(Geom a, Geom b) {
+            if (a == null || b == null) return false;
+            return a.getClass().equals(b.getClass());
+        }
+
+        /**
+         * Returns a 2D boolean array where [x][y] is true
+         * iff grid[x][y] is part of a contiguous
+         */
+        private boolean[][] matchyMatchy() {
+            boolean[][] arr = new boolean[grid.width][grid.height];
+
+            // Loop over columns
+            for (int col = 0; col < grid.width; col++) {
+                int groupSize = 1; // group of 1: only head
+                Geom head = grid.get(col, 0); // Item at beginning of current group
+
+                for (int row = 1; row < grid.height; row++) {
+                    Geom item = grid.get(col, row);
+                    if (matches(item, head)) {
+                        groupSize++;
+                        if (groupSize == 3) {
+                            arr[col][row - 2] = true;
+                            arr[col][row - 1] = true;
+                        }
+                        if (groupSize >= 3) {
+                            arr[col][row] = true;
+                        }
+                    } else {
+                        head = item;
+                        groupSize = 1;
+                    }
+                }
+            }
+
+            // Loop over rows
+            for (int row = 0; row < grid.height; row++) {
+                int groupSize = 1;
+                Geom head = grid.get(0, row);
+
+                for (int col = 1; col < grid.width; col++) {
+                    Geom item = grid.get(col, row);
+                    if (matches(item, head)) {
+                        groupSize++;
+                        if (groupSize == 3) {
+                            arr[col - 2][row] = true;
+                            arr[col - 1][row] = true;
+                        }
+                        if (groupSize >= 3) {
+                            arr[col][row] = true;
+                        }
+                    } else {
+                        head = item;
+                        groupSize = 1;
+                    }
+                }
+            }
+
+            return arr;
+        }
+
+        private boolean allFalse(boolean[][] ar) {
+            for (boolean[] row : ar) {
+                for (boolean item : row) {
+                    if (item == true) return false;
+                }
+            }
+            return true;
         }
 
         private final int padding = 40;
         @Override
         protected void onDraw(Canvas canvas) {
+
+            {
+                // Continually break groups and fill gaps
+                // until no gaps are left
+                boolean[][] mm;
+                do {
+                    mm = matchyMatchy();
+                    for (int col = 0; col < grid.width; col++) {
+                        for (int row = 0; row < grid.height; row++) {
+                            if (mm[col][row]) {
+                                grid.remove(col, row);
+                            }
+                        }
+                    }
+                    grid.fall();
+                } while (!allFalse(mm));
+            }
+
             for (int col = 0; col < grid.width; col++) {
                 for (int row = 0; row < grid.height; row++) {
                     Geom g = grid.get(col, row);
