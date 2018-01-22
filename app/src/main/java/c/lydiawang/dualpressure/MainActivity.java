@@ -30,6 +30,11 @@ public class MainActivity extends AppCompatActivity {
     private Paint squareFill;
     private Paint squareShineFill;
 
+    private Paint diamondStroke;
+    private Paint diamondFill;
+    private Paint diamondShineFill;
+
+
     private Grid<Geom> grid;
 
     private Paint newStrokePaint(float width, int color) {
@@ -61,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
         int squareShineFillColor = getResources().getColor(R.color.squareColor);
         int circleFillColor = getResources().getColor(R.color.circleCol);
         int circleShineFillColor = getResources().getColor(R.color.circleColor);
+        int diamondFillColor = getResources().getColor(R.color.diamondCol);
+        final int diamondShineFillColor = getResources().getColor(R.color.diamondColor);
 
 
         // TODO: Remove
@@ -79,18 +86,25 @@ public class MainActivity extends AppCompatActivity {
         squareStroke = newStrokePaint(strokeWidth, Color.BLACK);
         squareFill = newFillPaint(squareFillColor);
         squareShineFill = newFillPaint(squareShineFillColor);
+        
+        diamondStroke = newStrokePaint(strokeWidth, Color.BLACK);
+        diamondFill = newFillPaint(diamondFillColor);
+        diamondShineFill = newFillPaint(diamondShineFillColor);
+
 
         grid = new Grid<>(6, 9, new Function<Double, Geom>() {
             @Override
             public Geom apply(Double val) {
                 Rect boundless = new Rect(0, 0, 0, 0);
-                int choice = (int) (val * 3);
+                int choice = (int) (val * 4);
                 if (choice == 0) {
                     return new Circle(boundless, circleStroke, circleFill, circleShineFill);
                 } else if (choice == 1) {
                     return new Triangle(boundless, triangleStroke, triangleFill, triangleShineFill);
                 } else if (choice == 2) {
                     return new Square(boundless, squareStroke, squareFill, squareShineFill);
+                } else if (choice == 3) {
+                    return new Diamond(boundless, diamondStroke, diamondFill, diamondShineFill);
                 }
                 return null;
             }
