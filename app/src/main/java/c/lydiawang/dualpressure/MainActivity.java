@@ -34,8 +34,8 @@ public class MainActivity extends AppCompatActivity {
     private Paint diamondFill;
     private Paint diamondShineFill;
 
-
     private Grid<Geom> grid;
+    private GridRenderer<Geom> gridfx;
 
     private Paint newStrokePaint(float width, int color) {
         Paint paint = new Paint();
@@ -109,6 +109,8 @@ public class MainActivity extends AppCompatActivity {
                 return null;
             }
         });
+        gridfx = new GridRenderer<>(grid, shapeSize, 40, 40);
+
         grid.populate();
 
         LinearLayout mainLayout = findViewById(R.id.mainLayout);
@@ -122,7 +124,6 @@ public class MainActivity extends AppCompatActivity {
     private class DrawingArea extends View {
         private Paint linePaint = new Paint();
         private Geom swapGeom = null;
-        //private Blinker blinker = new Blinker();
 
         private volatile boolean shine = false;
 
@@ -297,7 +298,6 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
-        private final int padding = 40;
         @Override
         protected void onDraw(Canvas canvas) {
 
@@ -318,20 +318,7 @@ public class MainActivity extends AppCompatActivity {
                 } while (!allFalse(mm));
             }
 
-            //boolean[][] mm = matchyMatchy();
-
-            for (int col = 0; col < grid.width; col++) {
-                for (int row = 0; row < grid.height; row++) {
-                    Geom g = grid.get(col, row);
-
-                    //g.shine = mm[grid.colOf(g)][grid.rowOf(g)];
-
-                    int ss = (int) shapeSize;
-                    int offset = (int) (shapeSize / 2) + padding;
-                    g.setBounds(makeBounds((ss + padding) * col + offset + 40, (ss + padding) * row + offset + 20, ss)); // Because they started as boundless
-                    g.draw(canvas);
-                }
-            }
+            gridfx.draw(canvas);
         }
     }
 }
