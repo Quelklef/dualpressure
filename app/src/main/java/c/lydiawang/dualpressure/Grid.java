@@ -1,5 +1,8 @@
 package c.lydiawang.dualpressure;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by a bird on 1/21/18.
  *
@@ -8,9 +11,9 @@ package c.lydiawang.dualpressure;
  */
 
 public class Grid<T> {
-    private T[][] grid;  // [x][y], [col][row]
-    private int width;
-    private int height;
+    private List<List<T>> grid = new ArrayList<>();  // [x][y], [col][row]
+    public int width;
+    public int height;
     private Function<Double, T> generator;
 
     /**
@@ -20,12 +23,20 @@ public class Grid<T> {
     public Grid(int w, int h, Function<Double, T> generator) {
         width = w;
         height = h;
-        grid = (T[][]) new Object[w][h];
+
+        for (int x = 0; x < width; x++) {
+            List<T> col =new ArrayList<>();
+            for (int y = 0; y < height; y++) {
+                col.add(null);
+            }
+            grid.add(col);
+        }
+
         this.generator = generator;
     }
 
     public void set(int x, int y, T val) {
-        grid[x][y] = val;
+        grid.get(x).set(y, val);
     }
 
     public T gen() {
@@ -33,24 +44,26 @@ public class Grid<T> {
     }
 
     public T get(int x, int y) {
-        return grid[x][y];
+        return grid.get(x).get(y);
     }
 
-    /**
-     * get-forgiving. Returns get(x, y) or null
-     */
-    public T getf(int x, int y) {
-        return inBounds(x, y) ? get(x, y) : null;
-    }
 
     public void swap(int ax, int ay, int bx, int by) {
-        T tmp = grid[ax][ay];
-        grid[ax][ay] = grid[bx][by];
-        grid[bx][by] = tmp;
+        if (ax == bx && ay == by) return;
+        T tmp = get(ax, ay);
+        set(ax, ay, get(bx, by));
+        set(bx, by, tmp);
+    }
+
+    public void swap(T a, T b) {
+        swap(
+                colOf(a), rowOf(a),
+                colOf(b), rowOf(b)
+        );
     }
 
     public void remove(int x, int y) {
-        grid[x][y] = null;
+        set(x, y, null);
     }
 
     public boolean inBounds(int x, int y) {
@@ -68,7 +81,7 @@ public class Grid<T> {
     }
 
     /**
-     * Move columns down to fill null spots
+     * Move columns down to fillPaint null spots
      * Each column must have only one contiguous null spot
      */
     public void fall() {
@@ -93,5 +106,60 @@ public class Grid<T> {
                 moveg(col, row, col, row - holeSize);
             }
         }
+    }
+
+    /**
+     * Get all items in grid
+     */
+    public List<T> getAll() {
+        List<T> ret = new ArrayList<>();
+        int i = 0;
+
+        for (List<T> row : grid) {
+            for (T item : row) {
+                ret.add(item);
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Populates the entire grid with random items.
+     */
+    public void populate() {
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                set(x, y, gen());
+            }
+        }
+    }
+
+    public int colOf(T item) {
+        for (int col = 0; col < width; col++) {
+            if (grid.get(col).contains(item)) {
+                return col;
+            }
+        }
+        return -1;
+    }
+
+    public int rowOf(T item) {
+        List<T> col = grid.get(colOf(item));
+        for (int row = 0; row < height; row++) {
+            if (item.equals(col.get(row))) {
+                return row;
+            }
+        }
+        return -1;
+    }
+
+    public boolean adjacent(T a, T b) {
+        int ax = colOf(a);
+        int ay = rowOf(a);
+        int bx = colOf(b);
+        int by = rowOf(b);
+        return (ax == bx && Math.abs(ay - by) == 1) ||
+                (ay == by && Math.abs(ax - bx) == 1);
     }
 }

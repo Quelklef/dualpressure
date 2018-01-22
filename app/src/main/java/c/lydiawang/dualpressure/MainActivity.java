@@ -1,23 +1,15 @@
 package c.lydiawang.dualpressure;
 
 import android.content.Context;
-import android.content.res.ColorStateList;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.ShapeDrawable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,33 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private Paint squareStroke;
     private Paint squareFill;
 
-    private enum Mode {
-        AddSquare, AddCircle, AddTriangle, Select;
-    }
-    private Mode mode = null;
-    /*private volatile boolean blink = false;
-
-    private Runnable blinker = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                blink = true;
-                drawingArea.postInvalidate();
-                Thread.sleep(250);
-                blink = false;
-                drawingArea.postInvalidate();
-                Thread.sleep(250);
-                blink = true;
-                drawingArea.postInvalidate();
-                Thread.sleep(250);
-                blink = false;
-                drawingArea.postInvalidate();
-                tappedThing = null;
-            } catch (InterruptedException e) {
-                blink = false;
-            }
-        }
-    };*/
+    private Grid<Geom> grid;
 
     private Paint newStrokePaint(float width, int color) {
         Paint paint = new Paint();
@@ -83,11 +49,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ImageView squareImageView = findViewById(R.id.squareButton);
-        ImageView circleImageView = findViewById(R.id.circleButton);
-        ImageView triangleImageView = findViewById(R.id.triangleButton);
-        ImageView selectionImageView = findViewById(R.id.selectionButton);
-
         float strokeWidth = getResources().getDimension(R.dimen.strokeWidth);
         shapeSize = getResources().getDimension(R.dimen.shapeSize);
 
@@ -95,15 +56,9 @@ public class MainActivity extends AppCompatActivity {
         int squareFillColor = getResources().getColor(R.color.squareColor);
         int circleFillColor = getResources().getColor(R.color.circleColor);
 
-        // Hmm
-        ColorStateList strokeColor = getResources().getColorStateList(R.color.stroke);
-
+        // TODO: Remove
         lineColor = getResources().getColor(R.color.lineColor);
         lineWidth = getResources().getDimension(R.dimen.lineWidth);
-
-        assert squareImageView != null;
-        assert circleImageView != null;
-        assert triangleImageView != null;
 
         circleStroke = newStrokePaint(strokeWidth, Color.BLACK);
         circleFill = newFillPaint(circleFillColor);
@@ -114,12 +69,22 @@ public class MainActivity extends AppCompatActivity {
         squareStroke = newStrokePaint(strokeWidth, Color.BLACK);
         squareFill = newFillPaint(squareFillColor);
 
-        Rect bounds = new Rect(0, 0, (int) shapeSize, (int) shapeSize);
-        circleImageView.setImageDrawable(new Circle(bounds, circleStroke, circleFill));
-        triangleImageView.setImageDrawable(new Triangle(bounds, triangleStroke, triangleFill));
-        squareImageView.setImageDrawable(new Square(bounds, squareStroke, squareFill));
-
-        selectionImageView.setImageDrawable(new Circle(bounds, circleStroke, circleFill));
+        grid = new Grid<>(4, 6, new Function<Double, Geom>() {
+            @Override
+            public Geom apply(Double val) {
+                Rect boundless = new Rect(0, 0, 0, 0);
+                int choice = (int) (val * 3);
+                if (choice == 0) {
+                    return new Circle(boundless, circleStroke, circleFill);
+                } else if (choice == 1) {
+                    return new Triangle(boundless, triangleStroke, triangleFill);
+                } else if (choice == 2) {
+                    return new Square(boundless, squareStroke, squareFill);
+                }
+                return null;
+            }
+        });
+        grid.populate();
 
         LinearLayout mainLayout = findViewById(R.id.mainLayout);
         drawingArea = new DrawingArea(this);
@@ -129,35 +94,10 @@ public class MainActivity extends AppCompatActivity {
         mainLayout.addView(drawingArea);
     }
 
-    public void buttonPressed(View view) {
-        switch(view.getId()) {
-            case R.id.circleButton:
-                mode = Mode.AddCircle;
-                break;
-            case R.id.squareButton:
-                mode = Mode.AddSquare;
-                break;
-            case R.id.triangleButton:
-                mode = Mode.AddTriangle;
-                break;
-            case R.id.selectionButton:
-                mode = Mode.Select;
-                break;
-        }
-        ViewGroup group = (ViewGroup) view.getParent();
-        for(int i = 0; i < group.getChildCount(); i++) {
-            View child = group.getChildAt(i);
-            if (child != view) {
-                child.setSelected(false);
-            }
-        }
-        view.setSelected(true);
-    }
-
     private class DrawingArea extends View {
-        private List<Geom> geoms = new ArrayList<>();
-        private Geom selectedThing = null;
         private Paint linePaint = new Paint();
+        private Geom swapGeom = null;
+        //private Blinker blinker = new Blinker();
 
         public DrawingArea(Context context) {
             super(context);
@@ -167,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private Geom findGeomAt(int x, int y) {
-            for (Geom g : geoms) {
+            for (Geom g : grid.getAll()) {
                 if (g.bounds.contains(x, y)) {
                     return g;
                 }
@@ -184,55 +124,56 @@ public class MainActivity extends AppCompatActivity {
         public boolean onTouchEvent(MotionEvent event) {
             int x = (int) event.getX();
             int y = (int) event.getY();
-            int size = (int) shapeSize;
 
             switch(event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    switch(mode) {
-                        case AddSquare:
-                            geoms.add(new Square(makeBounds(x, y, size), squareStroke, squareFill));
-                            break;
-                        case AddCircle:
-                            geoms.add(new Circle(makeBounds(x, y, size), circleStroke, circleFill));
-                            break;
-                        case AddTriangle:
-                            geoms.add(new Triangle(makeBounds(x, y, size), triangleStroke, triangleFill));
-                            break;
-                        case Select:
-                            selectedThing = findGeomAt(x, y);
-                            if (selectedThing != null) {
-                                /*tappedThing = selectedThing;
-                                things.remove(selectedThing);
-                                things.add(selectedThing);
-                                new Thread(blinker).start();*/
+                    Geom selected = findGeomAt(x, y);
+
+                    if (selected != null) {
+                        if (swapGeom == null) {
+                            swapGeom = selected;
+                        } else {
+                            if (grid.adjacent(selected, swapGeom)) {
+                                grid.swap(selected, swapGeom);
                             }
-                            break;
+                            swapGeom = null;
+                        }
                     }
-                    invalidate();
-                    return true;
-                case MotionEvent.ACTION_MOVE:
-                    if (selectedThing != null) {
-                        selectedThing.setBounds(makeBounds(x, y, size));
-                    }
-                    invalidate();
-                    return true;
-                case MotionEvent.ACTION_UP:
-                    selectedThing = null;
+
                     invalidate();
                     return true;
             }
+
             return super.onTouchEvent(event);
         }
 
+        /**
+         * Sets blinking state of all items
+         * in grid whose type matches that of g.
+         * No-op if g is null.
+         */
+        private void setBlinking(Geom g, boolean blinking) {
+            if (g == null) return;
+            Class clazz = g.getClass();
+            for (Geom item : grid.getAll()) {
+                if (item.getClass().equals(clazz)) {
+                    // Do thing
+                }
+            }
+        }
+
+        private final int padding = 50;
         @Override
         protected void onDraw(Canvas canvas) {
-            for (Geom g : geoms) {
-                g.draw(canvas);
+            for (int col = 0; col < grid.width; col++) {
+                for (int row = 0; row < grid.height; row++) {
+                    Geom g = grid.get(col, row);
+                    int ss = (int) shapeSize;
+                    int offset = (int) (shapeSize / 2) + padding;
+                    g.setBounds(makeBounds((ss + padding) * col + offset, (ss + padding) * row + offset, ss)); // Because they started as boundless
+                    g.draw(canvas);
+                }
             }
         }
     }
-
-    // ??
-    private static final int[] selectedState = {android.R.attr.state_selected};
-    private static final int[] unselectedState = {};
 }

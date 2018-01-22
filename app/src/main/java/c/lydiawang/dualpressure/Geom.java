@@ -6,28 +6,36 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 public abstract class Geom extends android.graphics.drawable.Drawable {
     protected Rect bounds;
-    protected Paint stroke;
-    protected Paint fill;
+
+    public Paint strokePaint;
+    public Paint fillPaint;
 
     protected Path path;
 
     public Geom(Rect bounds, Paint stroke, Paint fill) {
         this.bounds = bounds;
-        this.stroke = stroke;
-        this.fill = fill;
+        this.strokePaint = stroke;
+        this.fillPaint = fill;
     }
 
     protected abstract Path makePath();
 
     @Override
-    public void draw(Canvas canvas) {
+    public void setBounds(@NonNull Rect bounds) {
+        this.bounds = bounds;
+    }
+    // DON'T CALL .getBounds() !!
+
+    @Override
+    public void draw(@NonNull Canvas canvas) {
         path = makePath();
-        canvas.drawPath(path, stroke);
-        canvas.drawPath(path, fill);
+        canvas.drawPath(path, strokePaint);
+        canvas.drawPath(path, fillPaint);
     }
 
     @Override
