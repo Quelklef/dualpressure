@@ -20,12 +20,15 @@ public class MainActivity extends AppCompatActivity {
 
     private Paint circleStroke;
     private Paint circleFill;
+    private Paint circleShineFill;
 
     private Paint triangleStroke;
     private Paint triangleFill;
+    private Paint triangleShineFill;
 
     private Paint squareStroke;
     private Paint squareFill;
+    private Paint squareShineFill;
 
     private Grid<Geom> grid;
 
@@ -52,9 +55,13 @@ public class MainActivity extends AppCompatActivity {
         float strokeWidth = getResources().getDimension(R.dimen.strokeWidth);
         shapeSize = getResources().getDimension(R.dimen.shapeSize);
 
-        int triangleFillColor = getResources().getColor(R.color.triangleColor);
-        int squareFillColor = getResources().getColor(R.color.squareColor);
-        int circleFillColor = getResources().getColor(R.color.circleColor);
+        int triangleFillColor = getResources().getColor(R.color.triangleCol);
+        int triangleShineFillColor = getResources().getColor(R.color.triangleColor);
+        int squareFillColor = getResources().getColor(R.color.squareCol);
+        int squareShineFillColor = getResources().getColor(R.color.squareColor);
+        int circleFillColor = getResources().getColor(R.color.circleCol);
+        int circleShineFillColor = getResources().getColor(R.color.circleColor);
+
 
         // TODO: Remove
         lineColor = getResources().getColor(R.color.lineColor);
@@ -62,12 +69,16 @@ public class MainActivity extends AppCompatActivity {
 
         circleStroke = newStrokePaint(strokeWidth, Color.BLACK);
         circleFill = newFillPaint(circleFillColor);
+        circleShineFill = newFillPaint(circleShineFillColor);
 
         triangleStroke = newStrokePaint(strokeWidth, Color.BLACK);
         triangleFill = newFillPaint(triangleFillColor);
+        triangleShineFill = newFillPaint(triangleShineFillColor);
+
 
         squareStroke = newStrokePaint(strokeWidth, Color.BLACK);
         squareFill = newFillPaint(squareFillColor);
+        squareShineFill = newFillPaint(squareShineFillColor);
 
         grid = new Grid<>(6, 9, new Function<Double, Geom>() {
             @Override
@@ -75,11 +86,11 @@ public class MainActivity extends AppCompatActivity {
                 Rect boundless = new Rect(0, 0, 0, 0);
                 int choice = (int) (val * 3);
                 if (choice == 0) {
-                    return new Circle(boundless, circleStroke, circleFill);
+                    return new Circle(boundless, circleStroke, circleFill, circleShineFill);
                 } else if (choice == 1) {
-                    return new Triangle(boundless, triangleStroke, triangleFill);
+                    return new Triangle(boundless, triangleStroke, triangleFill, triangleShineFill);
                 } else if (choice == 2) {
-                    return new Square(boundless, squareStroke, squareFill);
+                    return new Square(boundless, squareStroke, squareFill, squareShineFill);
                 }
                 return null;
             }
@@ -98,6 +109,42 @@ public class MainActivity extends AppCompatActivity {
         private Paint linePaint = new Paint();
         private Geom swapGeom = null;
         //private Blinker blinker = new Blinker();
+
+        private volatile boolean shine = false;
+
+        private Runnable blinker = new Runnable() {
+
+            @Override
+            public void run(){
+                try {
+                    shine = true;
+                    setBlinking(swapGeom, shine);
+                    postInvalidate();
+                    Thread.sleep(150);
+
+                    shine = false;
+                    setBlinking(swapGeom, shine);
+                    postInvalidate();
+                    Thread.sleep(150);
+
+                    shine = true;
+                    setBlinking(swapGeom, shine);
+                    postInvalidate();
+                    Thread.sleep(150);
+
+                    shine = false;
+                    setBlinking(swapGeom, shine);
+                    postInvalidate();
+                    Thread.sleep(150);
+
+                } catch (InterruptedException e) {
+                    shine = false;
+                }
+
+
+            }
+
+        };
 
         public DrawingArea(Context context) {
             super(context);
@@ -132,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
                     if (selected != null) {
                         if (swapGeom == null) {
                             swapGeom = selected;
+                            new Thread(blinker).start();
                         } else {
                             if (grid.adjacent(selected, swapGeom)) {
                                 grid.swap(selected, swapGeom);
@@ -157,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
             Class clazz = g.getClass();
             for (Geom item : grid.getAll()) {
                 if (item.getClass().equals(clazz)) {
-                    // Do thing
+                    item.shine = blinking;
                 }
             }
         }
@@ -165,6 +213,7 @@ public class MainActivity extends AppCompatActivity {
         private final int padding = 40;
         @Override
         protected void onDraw(Canvas canvas) {
+
             for (int col = 0; col < grid.width; col++) {
                 for (int row = 0; row < grid.height; row++) {
                     Geom g = grid.get(col, row);

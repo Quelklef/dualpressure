@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+	<color name="triangleCol">#c90404</color>
+	<color name="squareCol">#0707bc</color>
+	<color name="circleCol">#05c605</color>
+
 	<color name="triangleColor">#FF0000</color>
 	<color name="colorPrimary">#2196F3</color>
 	<color name="colorPrimaryDark">#1976D2</color>

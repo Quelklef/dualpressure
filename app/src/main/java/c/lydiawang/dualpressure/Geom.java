@@ -17,24 +17,15 @@ public abstract class Geom extends android.graphics.drawable.Drawable {
     public Paint fillPaint;
 
     public boolean shine; // make it shiny!
-    private static Paint shineStrokePaint;
-    private static Paint shineFillPaint;
-    static {
-        shineStrokePaint = new Paint();
-        shineStrokePaint.setStyle(Paint.Style.STROKE);
-        shineStrokePaint.setColor(Color.YELLOW);
-
-        shineFillPaint = new Paint();
-        shineFillPaint.setStyle(Paint.Style.FILL);
-        shineFillPaint.setColor(Color.BLACK);
-    }
+    private Paint shineFillPaint;
 
     protected Path path;
 
-    public Geom(Rect bounds, Paint stroke, Paint fill) {
+    public Geom(Rect bounds, Paint stroke, Paint fill, Paint shineFill) {
         this.bounds = bounds;
         this.strokePaint = stroke;
         this.fillPaint = fill;
+        this.shineFillPaint = shineFill;
     }
 
     protected abstract Path makePath();
@@ -49,7 +40,7 @@ public abstract class Geom extends android.graphics.drawable.Drawable {
     public void draw(@NonNull Canvas canvas) {
         path = makePath();
         if (shine) {
-            canvas.drawPath(path, shineStrokePaint);
+            canvas.drawPath(path, strokePaint);
             canvas.drawPath(path, shineFillPaint);
         } else {
             canvas.drawPath(path, strokePaint);

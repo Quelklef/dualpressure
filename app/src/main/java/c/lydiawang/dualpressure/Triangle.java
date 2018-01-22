@@ -5,8 +5,8 @@ import android.graphics.Path;
 import android.graphics.Rect;
 
 public class Triangle extends Geom {
-    public Triangle(Rect bounds, Paint stroke, Paint fill) {
-        super(bounds, stroke, fill);
+    public Triangle(Rect bounds, Paint stroke, Paint fill, Paint shineFill) {
+        super(bounds, stroke, fill, shineFill);
     }
 
     @Override
