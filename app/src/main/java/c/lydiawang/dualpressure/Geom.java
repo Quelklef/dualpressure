@@ -1,7 +1,6 @@
 package c.lydiawang.dualpressure;
 
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -11,8 +10,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 public abstract class Geom extends android.graphics.drawable.Drawable {
-    protected Rect bounds;
-
     public Paint strokePaint;
     public Paint fillPaint;
 
@@ -22,19 +19,13 @@ public abstract class Geom extends android.graphics.drawable.Drawable {
     protected Path path;
 
     public Geom(Rect bounds, Paint stroke, Paint fill, Paint shineFill) {
-        this.bounds = bounds;
+        setBounds(bounds);
         this.strokePaint = stroke;
         this.fillPaint = fill;
         this.shineFillPaint = shineFill;
     }
 
     protected abstract Path makePath();
-
-    @Override
-    public void setBounds(@NonNull Rect bounds) {
-        this.bounds = bounds;
-    }
-    // DON'T CALL .getBounds() !!
 
     @Override
     public void draw(@NonNull Canvas canvas) {
@@ -61,12 +52,5 @@ public abstract class Geom extends android.graphics.drawable.Drawable {
     @Override
     public int getOpacity() {
         return PixelFormat.OPAQUE;
-    }
-
-    public void animateTo(Rect newBounds) {
-        int fromT = bounds.top;
-        int fromB = bounds.bottom;
-        int fromL = bounds.left;
-        int fromR = bounds.right;
     }
 }

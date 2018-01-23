@@ -12,8 +12,6 @@ import android.view.View;
 import android.widget.LinearLayout;
 
 public class MainActivity extends AppCompatActivity {
-
-    private float shapeSize;
     private float lineWidth;
     private int lineColor;
     private DrawingArea drawingArea;
@@ -58,19 +56,21 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         float strokeWidth = getResources().getDimension(R.dimen.strokeWidth);
-        shapeSize = getResources().getDimension(R.dimen.shapeSize);
+        float shapeSize = getResources().getDimension(R.dimen.shapeSize);
 
         int triangleFillColor = getResources().getColor(R.color.triangleCol);
         int triangleShineFillColor = getResources().getColor(R.color.triangleColor);
+
         int squareFillColor = getResources().getColor(R.color.squareCol);
         int squareShineFillColor = getResources().getColor(R.color.squareColor);
+
         int circleFillColor = getResources().getColor(R.color.circleCol);
         int circleShineFillColor = getResources().getColor(R.color.circleColor);
+
         int diamondFillColor = getResources().getColor(R.color.diamondCol);
-        final int diamondShineFillColor = getResources().getColor(R.color.diamondColor);
+        int diamondShineFillColor = getResources().getColor(R.color.diamondColor);
 
-
-        // TODO: Remove
+        // TODO: Remove?
         lineColor = getResources().getColor(R.color.lineColor);
         lineWidth = getResources().getDimension(R.dimen.lineWidth);
 
@@ -82,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
         triangleFill = newFillPaint(triangleFillColor);
         triangleShineFill = newFillPaint(triangleShineFillColor);
 
-
         squareStroke = newStrokePaint(strokeWidth, Color.BLACK);
         squareFill = newFillPaint(squareFillColor);
         squareShineFill = newFillPaint(squareShineFillColor);
@@ -90,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
         diamondStroke = newStrokePaint(strokeWidth, Color.BLACK);
         diamondFill = newFillPaint(diamondFillColor);
         diamondShineFill = newFillPaint(diamondShineFillColor);
-
 
         grid = new Grid<>(6, 9, new Function<Double, Geom>() {
             @Override
@@ -109,9 +107,17 @@ public class MainActivity extends AppCompatActivity {
                 return null;
             }
         });
-        gridfx = new GridRenderer<>(grid, shapeSize, 40, 40);
+
+        gridfx = new GridRenderer<>(grid, shapeSize, 40, 40, new Runnable() {
+            @Override
+            public void run() {
+                drawingArea.postInvalidate();
+                //drawingArea.invalidate();
+            }
+        });
 
         grid.populate();
+        gridfx.refreshBounds();
 
         LinearLayout mainLayout = findViewById(R.id.mainLayout);
         drawingArea = new DrawingArea(this);
@@ -121,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
         mainLayout.addView(drawingArea);
     }
 
+    private final int BLINK_COUNT = 2;
     private class DrawingArea extends View {
         private Paint linePaint = new Paint();
         private Geom swapGeom = null;
@@ -128,37 +135,24 @@ public class MainActivity extends AppCompatActivity {
         private volatile boolean shine = false;
 
         private Runnable blinker = new Runnable() {
-
             @Override
             public void run(){
                 try {
-                    shine = true;
-                    setBlinking(swapGeom, shine);
-                    postInvalidate();
-                    Thread.sleep(150);
+                    for (int i = 0; i < BLINK_COUNT; i++) {
+                        shine = true;
+                        setBlinking(swapGeom, shine);
+                        postInvalidate();
+                        Thread.sleep(150);
 
-                    shine = false;
-                    setBlinking(swapGeom, shine);
-                    postInvalidate();
-                    Thread.sleep(150);
-
-                    shine = true;
-                    setBlinking(swapGeom, shine);
-                    postInvalidate();
-                    Thread.sleep(150);
-
-                    shine = false;
-                    setBlinking(swapGeom, shine);
-                    postInvalidate();
-                    Thread.sleep(150);
-
+                        shine = false;
+                        setBlinking(swapGeom, shine);
+                        postInvalidate();
+                        Thread.sleep(150);
+                    }
                 } catch (InterruptedException e) {
                     shine = false;
                 }
-
-
             }
-
         };
 
         public DrawingArea(Context context) {
@@ -170,16 +164,16 @@ public class MainActivity extends AppCompatActivity {
 
         private Geom findGeomAt(int x, int y) {
             for (Geom g : grid.getAll()) {
-                if (g.bounds.contains(x, y)) {
+                if (g == null) continue;
+                if (g.getBounds().contains(x, y)) {
                     return g;
                 }
             }
             return null;
         }
 
-        private Rect makeBounds(int x, int y, int size) {
-            int halfSize = size / 2;
-            return new Rect(x - halfSize, y - halfSize, x + halfSize, y + halfSize);
+        private Rect cloneRect(Rect r) {
+            return new Rect(r.left, r.top, r.right, r.bottom);
         }
 
         @Override
@@ -197,7 +191,13 @@ public class MainActivity extends AppCompatActivity {
                             new Thread(blinker).start();
                         } else {
                             if (grid.adjacent(selected, swapGeom)) {
+                                Rect selectedTo = cloneRect(swapGeom.getBounds());
+                                Rect swapTo = cloneRect(selected.getBounds());
+
                                 grid.swap(selected, swapGeom);
+
+                                gridfx.animate(selected, selectedTo);
+                                gridfx.animate(swapGeom, swapTo);
                             }
                             swapGeom = null;
                         }
@@ -206,6 +206,28 @@ public class MainActivity extends AppCompatActivity {
                     invalidate();
                     return true;
             }
+
+            gridfx.onFinish(new Thread() {
+                @Override
+                public void run() {
+                    // Continually break groups and fill gaps
+                    // until no gaps are left
+                    boolean[][] mm;
+                    do {
+                        mm = matchyMatchy();
+                        for (int col = 0; col < grid.width; col++) {
+                            for (int row = 0; row < grid.height; row++) {
+                                if (mm[col][row]) {
+                                    grid.remove(col, row);
+                                }
+                            }
+                        }
+
+                        grid.fall();
+                        gridfx.refreshBounds();
+                    } while (!allFalse(mm));
+                }
+            });
 
             return super.onTouchEvent(event);
         }
@@ -300,24 +322,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onDraw(Canvas canvas) {
-
-            {
-                // Continually break groups and fill gaps
-                // until no gaps are left
-                boolean[][] mm;
-                do {
-                    mm = matchyMatchy();
-                    for (int col = 0; col < grid.width; col++) {
-                        for (int row = 0; row < grid.height; row++) {
-                            if (mm[col][row]) {
-                                grid.remove(col, row);
-                            }
-                        }
-                    }
-                    grid.fall();
-                } while (!allFalse(mm));
-            }
-
             gridfx.draw(canvas);
         }
     }

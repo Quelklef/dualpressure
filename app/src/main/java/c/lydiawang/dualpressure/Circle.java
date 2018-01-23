@@ -12,7 +12,7 @@ public class Circle extends Geom {
     @Override
     protected Path makePath() {
         Path path = new Path();
-        path.addCircle(bounds.centerX(), bounds.centerY(), Math.min(bounds.width(), bounds.height()) / 2, Path.Direction.CCW);
+        path.addCircle(getBounds().centerX(), getBounds().centerY(), Math.min(getBounds().width(), getBounds().height()) / 2, Path.Direction.CCW);
         return path;
     }
 }

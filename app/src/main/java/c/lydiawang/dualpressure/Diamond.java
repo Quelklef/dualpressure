@@ -11,10 +11,10 @@ public class Diamond extends Geom {
 
     protected Path makePath() {
         Path path = new Path();
-        path.moveTo(bounds.centerX(), bounds.top);
-        path.lineTo(bounds.right, bounds.centerY());
-        path.lineTo(bounds.centerX(), bounds.bottom);
-        path.lineTo(bounds.left, bounds.centerY());
+        path.moveTo(getBounds().centerX(), getBounds().top);
+        path.lineTo(getBounds().right, getBounds().centerY());
+        path.lineTo(getBounds().centerX(), getBounds().bottom);
+        path.lineTo(getBounds().left, getBounds().centerY());
         path.close();
         return path;
     }

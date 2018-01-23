@@ -12,9 +12,9 @@ public class Triangle extends Geom {
     @Override
     protected Path makePath() {
         Path path = new Path();
-        path.moveTo(bounds.centerX(), bounds.top);
-        path.lineTo(bounds.right, bounds.bottom);
-        path.lineTo(bounds.left, bounds.bottom);
+        path.moveTo(getBounds().centerX(), getBounds().top);
+        path.lineTo(getBounds().right, getBounds().bottom);
+        path.lineTo(getBounds().left, getBounds().bottom);
         path.close();
         return path;
     }

@@ -12,10 +12,10 @@ public class Square extends Geom {
     @Override
     protected Path makePath() {
         Path path = new Path();
-        path.moveTo(bounds.left, bounds.top);
-        path.lineTo(bounds.right, bounds.top);
-        path.lineTo(bounds.right, bounds.bottom);
-        path.lineTo(bounds.left, bounds.bottom);
+        path.moveTo(getBounds().left, getBounds().top);
+        path.lineTo(getBounds().right, getBounds().top);
+        path.lineTo(getBounds().right, getBounds().bottom);
+        path.lineTo(getBounds().left, getBounds().bottom);
         path.close();
         return path;
     }
