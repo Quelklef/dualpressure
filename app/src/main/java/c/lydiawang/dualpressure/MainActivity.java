@@ -150,7 +150,8 @@ public class MainActivity extends AppCompatActivity {
                         Thread.sleep(150);
                     }
                 } catch (InterruptedException e) {
-                    shine = false;
+                    setBlinking(swapGeom, false);
+                    postInvalidate();
                 }
             }
         };
@@ -196,8 +197,8 @@ public class MainActivity extends AppCompatActivity {
 
                                 grid.swap(selected, swapGeom);
 
-                                gridfx.animate(selected, selectedTo);
-                                gridfx.animate(swapGeom, swapTo);
+                                gridfx.animateTimed(selected, selectedTo, 50);
+                                gridfx.animateTimed(swapGeom, swapTo, 50);
                             }
                             swapGeom = null;
                         }
@@ -215,16 +216,51 @@ public class MainActivity extends AppCompatActivity {
                     boolean[][] mm;
                     do {
                         mm = matchyMatchy();
-                        for (int col = 0; col < grid.width; col++) {
-                            for (int row = 0; row < grid.height; row++) {
+                        for (int row = grid.height - 1; row >= 0; row--) {
+                            for (int col = 0; col < grid.width; col++) {
                                 if (mm[col][row]) {
                                     grid.remove(col, row);
+
+                                    postInvalidate();
+                                    try {
+                                        Thread.sleep(50);
+                                    } catch (InterruptedException e) { }
                                 }
                             }
                         }
 
-                        grid.fall();
-                        gridfx.refreshBounds();
+                        // Fill holes
+                        for (int col = 0; col < grid.width; col++) {
+                            for (int row = grid.height - 1; row >= 0; row--) {
+                                if (grid.get(col, row) == null) {
+
+                                    // Find the closest above non-null item
+                                    // Initialize to default case (generated item)
+                                    Geom upperItem = grid.gen();
+                                    upperItem.setBounds(gridfx.positonToBounds(col, -1));
+                                    int source = -1; // y-value of found item
+                                    for (int roww = row - 1; roww >= 0; roww--) {
+                                        Geom item = grid.get(col, roww);
+                                        if (item != null) {
+                                            upperItem = item;
+                                            source = roww;
+                                            break;
+                                        }
+                                    }
+
+                                    // TODO: For some reason, animation not working with generated items
+                                    Thread anim = gridfx.animateTimed(upperItem, gridfx.positonToBounds(col, row), 500);
+                                    try {
+                                        anim.join();
+                                    } catch (InterruptedException e) { }
+
+                                    grid.set(col, row, upperItem);
+                                    // Remove if wasn't generated
+                                    if (source != -1) grid.remove(col, source);
+                                }
+                            }
+                        }
+
                     } while (!allFalse(mm));
                 }
             });

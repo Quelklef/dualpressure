@@ -8,7 +8,6 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -43,8 +42,11 @@ public class GridRenderer<T extends Drawable> extends Drawable {
         int hOffset = (int) (itemSize / 2) + hPadding;
         int vOffset = (int) (itemSize / 2) + vPadding;
         int is = (int) itemSize;
-        return makeBounds((is + hPadding) * x + hOffset /*+ 40*/,
-                (is + vPadding) * y + vOffset /*+ 20*/, is);
+        return makeBounds(
+                (is + hPadding) * x + hOffset /*+ 40*/,
+                (is + vPadding) * y + vOffset /*+ 20*/,
+                is
+        );
     }
 
     /**
@@ -61,6 +63,7 @@ public class GridRenderer<T extends Drawable> extends Drawable {
      */
     public void refreshBounds() {
         for (T item : grid.getAll()) {
+            if (item == null) continue;
             updateBounds(item);
         }
     }
@@ -70,9 +73,10 @@ public class GridRenderer<T extends Drawable> extends Drawable {
 
     private final List<Thread> runningThreads = new LinkedList<>();
 
-    public void animate(final T shape, final Rect toBounds) {
-        final int steps = 20;
-
+    /**
+     * Takes: A shape, goal final location, and time spend on animation (in ms)
+     */
+    public Thread animate(final T shape, final Rect toBounds, final int steps, final int sleepTime) {
         final Rect fromBounds = shape.getBounds();
         final int fromT = fromBounds.top;
         final int fromR = fromBounds.right;
@@ -88,7 +92,7 @@ public class GridRenderer<T extends Drawable> extends Drawable {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(20);
+                    Thread.sleep(sleepTime);
                 } catch (InterruptedException e) { }
 
                 for (int s = 1; s < steps; s++) {
@@ -103,7 +107,7 @@ public class GridRenderer<T extends Drawable> extends Drawable {
                     new Thread(invalidate).start();
 
                     try {
-                        Thread.sleep(20);
+                        Thread.sleep(sleepTime);
                     } catch (InterruptedException e) { }
                 }
 
@@ -124,12 +128,36 @@ public class GridRenderer<T extends Drawable> extends Drawable {
                 try {
                     thread.join();
                 } catch (InterruptedException e) { }
-
                 synchronized (runningThreads) {
                     runningThreads.remove(thread);
                 }
             }
         }.start();
+
+        return thread;
+    }
+
+    public Thread animateTimed(T shape, Rect toBounds, int time) {
+        return animate(shape, toBounds, 5, time / 20);
+    }
+
+    public Thread animateTimed(T shape, Rect toBounds) {
+        // Default time: 1s
+        return animateTimed(shape, toBounds, 100);
+    }
+
+    /**
+     * Takes: A shape, goal final location, and animation speed (in px/ms)
+     */
+    // TODO: Would like to use for falling items but is SUPER broken
+    public Thread animateClocked(T shape, Rect toBounds, int slowness) {
+        Rect fromBounds = shape.getBounds();
+        double distance = Math.sqrt(
+                Math.pow(toBounds.centerX() - fromBounds.centerX(), 2)
+                + Math.pow(toBounds.centerY() - fromBounds.centerY(), 2)
+        );
+
+        return animate(shape, toBounds, (int) distance / 20, slowness);
     }
 
     /**
