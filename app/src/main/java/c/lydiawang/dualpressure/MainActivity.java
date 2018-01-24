@@ -12,6 +12,8 @@ import android.view.View;
 import android.widget.LinearLayout;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private float lineWidth;
@@ -34,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private Paint diamondFill;
     private Paint diamondShineFill;
 
-    private Grid<Geom> grid;
+    private volatile Grid<Geom> grid;
     private GridRenderer<Geom> gridfx;
 
     private Paint newStrokePaint(float width, int color) {
@@ -194,18 +196,13 @@ public class MainActivity extends AppCompatActivity {
                             new Thread(blinker).start();
                         } else {
                             if (grid.adjacent(selected, swapGeom)) {
-                                //Geom[] shipshap = {swapGeom, selected};
-                                //Rect[] swipswop = {cloneRect(swapGeom.getBounds()), cloneRect(selected.getBounds())};
                                 Rect selectedTo = cloneRect(swapGeom.getBounds());
                                 Rect swapTo = cloneRect(selected.getBounds());
 
                                 grid.swap(selected, swapGeom);
 
-
-                                //gridfx.animateTimedAll(shipshap, swipswop, 50);
-
-                                gridfx.animateTimed(selected, selectedTo, 50);
-                                gridfx.animateTimed(swapGeom, swapTo, 50);
+                                gridfx.animate(selected, selectedTo, 10);
+                                gridfx.animate(swapGeom, swapTo, 10);
                             }
                             swapGeom = null;
                         }
@@ -237,47 +234,50 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         while(grid.hasNulls()){
-                            ArrayList<Geom> toAnim = new ArrayList<>();
-                            ArrayList<Rect> origin = new ArrayList<>();
-                            ArrayList<Rect> destin = new ArrayList<>();
+                            List<Geom> toAnim = new LinkedList<>();
+                            List<Rect> origins = new LinkedList<>();
+                            List<Rect> destinations = new LinkedList<>();
 
-                            boolean done;
                             for (int col = 0; col < grid.width; col++) {
-                                done = false;
+                                boolean holeFound = false;
+
                                 for (int row = grid.height - 1; row >= 0; row--) {
-                                    Geom curr = grid.get(col, row);
-                                    if(done && curr != null){
+                                    Geom item = grid.get(col, row);
+                                    if (item == null) holeFound = true;
+                                    // Move all down
+                                    if (holeFound && item != null) {
                                         toAnim.add(grid.get(col, row));
-                                        origin.add(gridfx.positionToBounds(col, row));
-                                        destin.add(gridfx.positionToBounds(col, row+1));
-                                        grid.moveg(col, row, col, row+1);
-                                    }
-                                    if(curr == null && !done){
-                                        done = true;
+                                        origins.add(gridfx.positionToBounds(col, row));
+                                        destinations.add(gridfx.positionToBounds(col, row + 1));
+                                        grid.move(col, row, col, row + 1);
                                     }
                                 }
-                                if(done){
-                                    Geom up = grid.gen();
-                                    grid.set(col, 0, up);
-                                    up.setBounds(gridfx.positionToBounds(col, -1));
-                                    toAnim.add(up);
-                                    origin.add(gridfx.positionToBounds(col, -1));
-                                    destin.add(gridfx.positionToBounds(col, 0));
-                                    grid.set(col, 0, up);
+
+                                // If we found a hole, then we're going to need
+                                // to fill in the topmost spot, which will be empty
+                                if (holeFound) {
+                                    Geom upperItem = grid.moveg(col, -1, col, 0);
+                                    //upperItem.setBounds(gridfx.positionToBounds(col, -1));
+                                    toAnim.add(upperItem);
+                                    origins.add(gridfx.positionToBounds(col, -1));
+                                    destinations.add(gridfx.positionToBounds(col, 0));
                                 }
                             }
 
-                            Geom[] anim = toAnim.toArray(new Geom[toAnim.size()]);
-                            Rect[] orig = origin.toArray(new Rect[origin.size()]);
-                            Rect[] dest = destin.toArray(new Rect[destin.size()]);
-
-                            Thread animAll = gridfx.animateTimedAll(anim, orig, dest, 500);
+                            Thread animAll = gridfx.animate(
+                                    toAnim,
+                                    origins,
+                                    destinations,
+                                    3
+                            );
 
                             try {
                                 animAll.join();
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
+
+                            postInvalidate();
                         }
 
 
@@ -302,7 +302,7 @@ public class MainActivity extends AppCompatActivity {
                                     }
 
                                     // TODO: For some reason, animation not working with generated items
-                                    Thread animation = gridfx.animateTimed(upperItem, gridfx.positionToBounds(col, row), 500);
+                                    Thread animation = gridfx.animate(upperItem, gridfx.positionToBounds(col, row), 10);
                                     try {
                                         animation.join();
                                     } catch (InterruptedException e) { }

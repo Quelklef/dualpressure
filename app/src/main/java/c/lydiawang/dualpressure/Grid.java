@@ -74,15 +74,27 @@ public class Grid<T> {
         return x > 0 && y > 0 && x < width && y < height;
     }
 
+    public T move(int fx, int fy, int tx, int ty) {
+        T item = get(fx, fy);
+        set(tx, ty, item);
+        remove(fx, fy);
+        return item;
+    }
+
     /**
      * Move an item from one spot to another.
      * If (fx, fy) is out of bounds, instead generate
-     * a new item and move it into (tx, ty)
+     * a new item and move it into (tx, ty).
+     * Returns the item moved into the given spot.
      */
-    public void moveg(int fx, int fy, int tx, int ty) {
-        T item = inBounds(fx, fy) ? get(fx, fy) : gen();
-        set(tx, ty, item);
-        if (inBounds(fx, fy)) remove(fx, fy);
+    public T moveg(int fx, int fy, int tx, int ty) {
+        if (inBounds(fx, fy)) {
+            return move(fx, fy, tx, ty);
+        } else {
+            T item = gen();
+            set(tx, ty, item);
+            return item;
+        }
     }
 
     /**
