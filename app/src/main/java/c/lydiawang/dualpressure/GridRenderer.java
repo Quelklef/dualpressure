@@ -38,7 +38,7 @@ public class GridRenderer<T extends Drawable> extends Drawable {
     // --
     // Drawing
 
-    public Rect positonToBounds(int x, int y) {
+    public Rect positionToBounds(int x, int y) {
         int hOffset = (int) (itemSize / 2) + hPadding;
         int vOffset = (int) (itemSize / 2) + vPadding;
         int is = (int) itemSize;
@@ -55,7 +55,7 @@ public class GridRenderer<T extends Drawable> extends Drawable {
      * be handled by an animation instead.
      */
     public void updateBounds(T item) {
-        item.setBounds(positonToBounds(grid.colOf(item), grid.rowOf(item)));
+        item.setBounds(positionToBounds(grid.colOf(item), grid.rowOf(item)));
     }
 
     /**
@@ -137,8 +137,101 @@ public class GridRenderer<T extends Drawable> extends Drawable {
         return thread;
     }
 
+    /**
+     * Takes: A shape, goal final location, and time spend on animation (in ms)
+     */
+    public Thread animateAll(final T[] shape, final Rect[] fromBounds, final Rect[] toBounds, final int steps, final int sleepTime) {
+        final int[] fromT = new int[shape.length];
+        final int[] fromR = new int[shape.length];
+        final int[] fromB = new int[shape.length];
+        final int[] fromL = new int[shape.length];
+
+        final int[] dT = new int[shape.length];
+        final int[] dR = new int[shape.length];
+        final int[] dB = new int[shape.length];
+        final int[] dL = new int[shape.length];
+
+        for(int i = 0; i < shape.length; i++){
+		    T shap = shape[i];
+		    Geom g = (Geom) shap;
+		    g.shine = true;
+		    fromBounds[i] = shap.getBounds();
+            fromT[i] = fromBounds[i].top;
+            fromR[i] = fromBounds[i].right;
+            fromB[i] = fromBounds[i].bottom;
+            fromL[i] = fromBounds[i].left;
+
+            dT[i] = (toBounds[i].top    - fromT[i]) / steps;
+            dR[i] = (toBounds[i].right  - fromR[i]) / steps;
+            dB[i] = (toBounds[i].bottom - fromB[i]) / steps;
+            dL[i] = (toBounds[i].left   - fromL[i]) / steps;
+        }
+
+        new Thread(invalidate).start();
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        final Thread thread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(sleepTime);
+                } catch (InterruptedException e) { }
+
+                for(int i = 0; i < shape.length; i++){
+                    for (int s = 1; s < steps; s++) {
+                        Rect bounds = new Rect(
+                                fromL[i] + s * dL[i],
+                                fromT[i] + s * dT[i],
+                                fromR[i] + s * dR[i],
+                                fromB[i] + s * dB[i]
+                        );
+
+                        shape[i].setBounds(bounds);
+                        new Thread(invalidate).start();
+
+                        try {
+                            Thread.sleep(sleepTime);
+                        } catch (InterruptedException e) { }
+                    }
+                    shape[i].setBounds(toBounds[i]); // Circumvent floating-point inaccuracies
+                }
+
+                new Thread(invalidate).start();
+            }
+        };
+
+        // Start thread when possible
+        synchronized (runningThreads) {
+            runningThreads.add(thread);
+            thread.start();
+        }
+
+        // Remove thread when it finishes
+        new Thread() {
+            @Override public void run() {
+                try {
+                    thread.join();
+                } catch (InterruptedException e) { }
+                synchronized (runningThreads) {
+                    runningThreads.remove(thread);
+                }
+            }
+        }.start();
+
+        return thread;
+    }
+
     public Thread animateTimed(T shape, Rect toBounds, int time) {
         return animate(shape, toBounds, 5, time / 20);
+    }
+
+    public Thread animateTimedAll(T[] shape, Rect[] fromBounds, Rect[] toBounds, int time) {
+        return animateAll(shape, fromBounds, toBounds, 5, time / 20);
     }
 
     public Thread animateTimed(T shape, Rect toBounds) {

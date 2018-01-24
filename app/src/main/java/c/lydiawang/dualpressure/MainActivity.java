@@ -11,6 +11,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
     private float lineWidth;
     private int lineColor;
@@ -192,10 +194,15 @@ public class MainActivity extends AppCompatActivity {
                             new Thread(blinker).start();
                         } else {
                             if (grid.adjacent(selected, swapGeom)) {
+                                //Geom[] shipshap = {swapGeom, selected};
+                                //Rect[] swipswop = {cloneRect(swapGeom.getBounds()), cloneRect(selected.getBounds())};
                                 Rect selectedTo = cloneRect(swapGeom.getBounds());
                                 Rect swapTo = cloneRect(selected.getBounds());
 
                                 grid.swap(selected, swapGeom);
+
+
+                                //gridfx.animateTimedAll(shipshap, swipswop, 50);
 
                                 gridfx.animateTimed(selected, selectedTo, 50);
                                 gridfx.animateTimed(swapGeom, swapTo, 50);
@@ -229,6 +236,52 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
 
+                        while(grid.hasNulls()){
+                            ArrayList<Geom> toAnim = new ArrayList<>();
+                            ArrayList<Rect> origin = new ArrayList<>();
+                            ArrayList<Rect> destin = new ArrayList<>();
+
+                            boolean done;
+                            for (int col = 0; col < grid.width; col++) {
+                                done = false;
+                                for (int row = grid.height - 1; row >= 0; row--) {
+                                    Geom curr = grid.get(col, row);
+                                    if(done && curr != null){
+                                        toAnim.add(grid.get(col, row));
+                                        origin.add(gridfx.positionToBounds(col, row));
+                                        destin.add(gridfx.positionToBounds(col, row+1));
+                                        grid.moveg(col, row, col, row+1);
+                                    }
+                                    if(curr == null && !done){
+                                        done = true;
+                                    }
+                                }
+                                if(done){
+                                    Geom up = grid.gen();
+                                    grid.set(col, 0, up);
+                                    up.setBounds(gridfx.positionToBounds(col, -1));
+                                    toAnim.add(up);
+                                    origin.add(gridfx.positionToBounds(col, -1));
+                                    destin.add(gridfx.positionToBounds(col, 0));
+                                    grid.set(col, 0, up);
+                                }
+                            }
+
+                            Geom[] anim = toAnim.toArray(new Geom[toAnim.size()]);
+                            Rect[] orig = origin.toArray(new Rect[origin.size()]);
+                            Rect[] dest = destin.toArray(new Rect[destin.size()]);
+
+                            Thread animAll = gridfx.animateTimedAll(anim, orig, dest, 500);
+
+                            try {
+                                animAll.join();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+
+                        /*
                         // Fill holes
                         for (int col = 0; col < grid.width; col++) {
                             for (int row = grid.height - 1; row >= 0; row--) {
@@ -237,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
                                     // Find the closest above non-null item
                                     // Initialize to default case (generated item)
                                     Geom upperItem = grid.gen();
-                                    upperItem.setBounds(gridfx.positonToBounds(col, -1));
+                                    upperItem.setBounds(gridfx.positionToBounds(col, -1));
                                     int source = -1; // y-value of found item
                                     for (int roww = row - 1; roww >= 0; roww--) {
                                         Geom item = grid.get(col, roww);
@@ -249,9 +302,9 @@ public class MainActivity extends AppCompatActivity {
                                     }
 
                                     // TODO: For some reason, animation not working with generated items
-                                    Thread anim = gridfx.animateTimed(upperItem, gridfx.positonToBounds(col, row), 500);
+                                    Thread animation = gridfx.animateTimed(upperItem, gridfx.positionToBounds(col, row), 500);
                                     try {
-                                        anim.join();
+                                        animation.join();
                                     } catch (InterruptedException e) { }
 
                                     grid.set(col, row, upperItem);
@@ -260,6 +313,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
                         }
+                        */
 
                     } while (!allFalse(mm));
                 }

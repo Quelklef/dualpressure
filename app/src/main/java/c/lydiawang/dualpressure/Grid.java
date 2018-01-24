@@ -183,4 +183,11 @@ public class Grid<T> {
         }
         return ret;
     }
+
+    public boolean hasNulls(){
+        for (T item : getAll()) {
+            if (item == null) return true;
+        }
+        return false;
+    }
 }
